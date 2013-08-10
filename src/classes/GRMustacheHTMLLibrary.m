@@ -46,8 +46,7 @@
     // rendering.
     
     return [GRMustache renderingObjectWithBlock:^NSString *(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error) {
-        id<GRMustacheRendering> renderingObject = [GRMustache renderingObjectForObject:object];
-        NSString *rendering = [renderingObject renderForMustacheTag:tag context:context HTMLSafe:HTMLSafe error:error];
+        NSString *rendering = [[GRMustache renderingObjectForObject:object] renderForMustacheTag:tag context:context HTMLSafe:HTMLSafe error:error];
         return [GRMustache escapeHTML:rendering];
     }];
 }
