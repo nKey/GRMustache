@@ -30,17 +30,39 @@
 
 - (void)testStringFilterAppliesPostRendering
 {
-    id data = @{ @"filter1": [GRMustacheFilter stringFilterWithBlock:^id(NSString *string) {
-                     return [string uppercaseString];
-                 }],
-                 @"filter2": [GRMustacheFilter stringFilterWithBlock:^id(NSString *string) {
-                     return [string stringByAppendingString:@"xxx"];
-                 }],
-                 @"value": [GRMustache renderingObjectWithBlock:^NSString *(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error) { return @"foo"; }]};
+    id data = @{
+                @"filter1": [GRMustacheFilter stringFilterWithBlock:^id(NSString *string) {
+                    return [string uppercaseString];
+                }],
+                @"filter2": [GRMustacheFilter stringFilterWithBlock:^id(NSString *string) {
+                    return [string stringByAppendingString:@"xxx"];
+                }],
+                @"value": [GRMustache renderingObjectWithBlock:^NSString *(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error) {
+                    return @"foo";
+                }]};
     
-    NSString *templateString = @"{{ filter1(value) }},{{ filter2(value) }},{{ filter1(filter2(value)) }},{{ filter2(filter1(value)) }}";
+    NSString *templateString = @"{{ value }},{{ filter1(value) }},{{ filter2(value) }},{{ filter1(filter2(value)) }},{{ filter2(filter1(value)) }}";
     NSString *rendering = [GRMustacheTemplate renderObject:data fromString:templateString error:NULL];
-    STAssertEqualObjects(rendering, @"FOO,fooxxx,FOOXXX,FOOxxx", @"");
+    STAssertEqualObjects(rendering, @"foo,FOO,fooxxx,FOOXXX,FOOxxx", @"");
+}
+
+- (void)testStringFilterPreservesHTMLSafety
+{
+    id data = @{
+                @"filter1": [GRMustacheFilter stringFilterWithBlock:^id(NSString *string) {
+                    return [string uppercaseString];
+                }],
+                @"filter2": [GRMustacheFilter stringFilterWithBlock:^id(NSString *string) {
+                    return [string stringByAppendingString:@"&b"];
+                }],
+                @"value": [GRMustache renderingObjectWithBlock:^NSString *(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error) {
+                    *HTMLSafe = YES;
+                    return @"<a>";
+                }]};
+    
+    NSString *templateString = @"{{ value }},{{ filter1(value) }},{{ filter2(value) }},{{ filter1(filter2(value)) }},{{ filter2(filter1(value)) }}";
+    NSString *rendering = [GRMustacheTemplate renderObject:data fromString:templateString error:NULL];
+    STAssertEqualObjects(rendering, @"<a>,<A>,<a>&b,<A>&B,<A>&b", @"");
 }
 
 @end
