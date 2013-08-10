@@ -21,6 +21,8 @@
 // THE SOFTWARE.
 
 #import "GRMustacheFilter_private.h"
+#import "GRMustache_private.h"
+#import "GRMustacheRendering.h"
 
 // =============================================================================
 #pragma mark - Private concrete class GRMustacheBlockFilter
@@ -61,6 +63,29 @@
 + (id<GRMustacheFilter>)filterWithBlock:(id(^)(id value))block
 {
     return [[[GRMustacheBlockFilter alloc] initWithBlock:block] autorelease];
+}
+
++ (id<GRMustacheFilter>)stringFilterWithBlock:(id(^)(NSString *string))block
+{
+    if (block == nil) {
+        [NSException raise:NSInvalidArgumentException format:@"Can't build a filter with a nil block."];
+    }
+    
+    return [GRMustacheFilter filterWithBlock:^id(id value) {
+        
+        // Our transformation applies to strings, not to objects of type `id`.
+        //
+        // So let's transform the *rendering* of the object, not the object itself.
+        //
+        // However, we do not have the rendering yet. So we return a rendering
+        // object that will eventually render the object, and transform the
+        // rendering.
+        
+        return [GRMustache renderingObjectWithBlock:^NSString *(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error) {
+            NSString *rendering = [[GRMustache renderingObjectForObject:value] renderForMustacheTag:tag context:context HTMLSafe:HTMLSafe error:error];
+            return block(rendering);
+        }];
+    }];
 }
 
 + (id<GRMustacheFilter>)variadicFilterWithBlock:(id(^)(NSArray *arguments))block

@@ -57,6 +57,9 @@
 + (id<GRMustacheFilter>)filterWithBlock:(id(^)(id value))block GRMUSTACHE_API_PUBLIC;
 
 // Documented in GRMustacheFilter.h
++ (id<GRMustacheFilter>)stringFilterWithBlock:(id(^)(NSString *string))block GRMUSTACHE_API_PUBLIC;
+
+// Documented in GRMustacheFilter.h
 + (id<GRMustacheFilter>)variadicFilterWithBlock:(id(^)(NSArray *arguments))block GRMUSTACHE_API_PUBLIC;
 
 @end

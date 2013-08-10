@@ -129,12 +129,45 @@ Final rendering:
     2012-10-28
 
 
+Special Case: String Processing
+-------------------------------
+
+Filters take objects of type `id`:
+
+```objc
+- (id)transformedValue:(id)object
+{
+    return ...;
+}
+```
+
+Should your filter want to process *strings*, you need to build a string out of this object of type `id`. For example, you may want to write a filter that outputs the length of its input.
+
+A natural way to turn such an `id` object into a string is to *render it*.
+
+The `GRMustacheFilter` class provides a convenient method for building such a filter that processes such rendered strings:
+
+```objc
+id lengthFilter = [GRMustacheFilter stringFilterWithBlock:^id(NSString *string) {
+    // _string_ contains the rendering of the filter argument.
+    return @([string length]);
+}];
+
+id data = @{ @"length": lengthFilter,
+             @"value": @1.23 };
+NSString *templateString = @"{{ length(value) }}";
+
+// Rendering is `4` (length of "1.23"):
+NSString *rendering = [GRMustacheTemplate renderObject:data fromString:templateString error:NULL];
+```
+
+
 Filters that return rendering objects
 -------------------------------------
 
 "Rendering objects" are objects that perform a custom rendering. They are described in detail in the [Rendering Objects Guide](rendering_objects.md).
 
-A fundamental technique of advanced GRMustache rendering is filters that return rendering objects. For example:
+Filters that return rendering objects are a fundamental technique of advanced GRMustache rendering. For example:
 
     I have {{ cats.count }} {{# pluralize(cats.count) }}cat{{/ }}.
 

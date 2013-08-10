@@ -32,6 +32,51 @@ Note that a tag like `{{ person.name }}` is rendered once. Thus the delegate wil
 Also: when a section tag `{{# pets }}...{{/ pets }}` is provided with an array, its content is rendered several times. However the delegate will be called once, with the array passed in the _object_ argument.
 
 
+Special Case: String Processing
+-------------------------------
+
+The `mustacheTag:willRenderObject:` method takes an object of type `id`, before it is rendered:
+
+```objc
+- (id)mustacheTag:(GRMustacheTag *)tag willRenderObject:(id)object
+{
+    return ...;
+}
+```
+
+Should your delegate want to process *strings*, you need to build a string out of this object of type `id`. For example, you may want to write a tag delegate that outputs the uppercase version of all inner tags in a section.
+
+A natural way to turn such an `id` object into a string is to *render it*.
+
+However the GRMustacheTagDelegate protocol does not provide enough information to render objects right away. Post-processing of the rendering of the object can be achieved by postponing the rendering until it can be done, using the following technique:
+
+```objc
+- (id)mustacheTag:(GRMustacheTag *)tag willRenderObject:(id)object
+{
+    // Our transformation applies to strings, not to objects of type `id`.
+    //
+    // So let's transform the *rendering* of the object, not the object itself.
+    //
+    // However, we do not have the rendering yet. So we return a rendering
+    // object that will eventually render the object, and transform the
+    // rendering.
+    
+    return [GRMustache renderingObjectWithBlock:^NSString *(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error) {
+        
+        // First render:
+        
+        NSString *rendering = [[GRMustache renderingObjectForObject:object] renderForMustacheTag:tag context:context HTMLSafe:HTMLSafe error:error];
+        
+        // And then apply our transformation:
+        
+        return [rendering uppercaseString];
+    }];
+}
+```
+
+"Rendering objects" are objects that perform a custom rendering. They are described in detail in the [Rendering Objects Guide](rendering_objects.md).
+
+
 Providing Tag Delegates
 -----------------------
 
@@ -42,6 +87,7 @@ Actually, *many* tag delegates can enter the game, observe, and alter the render
 Delegates are scoped. They can observe all tags in a template, or all inner tags of a template section, such as `{{# xxx }}...{{/ xxx }}`.
 
 You have to ways to inject tag delegates. The simplest is to have them enter the [context stack](runtime.md#the-context-stack). However, sometimes, your delegate should not "pollute" the template rendering with its own keys, and you will need to explicitely derive new contexts. Please follow us:
+
 
 ### By Entering the Context Stack
 
@@ -103,7 +149,6 @@ NSString *rendering = [template renderObject:document error:NULL];
 See the [GRMustacheTemplate Class Reference](http://groue.github.io/GRMustache/Reference/Classes/GRMustacheTemplate.html) for a full discussion of `extendBaseContextWithTagDelegate:`.
 
 
-
 ### By Deriving a Deep Context
 
 To illustrate this last use case, let's write an object that renders the uppercase version of all inner tags of the section it is attached to.
@@ -135,15 +180,36 @@ It conforms to GRMustacheTagDelegate, obviously, but also to the [GRMustacheRend
 // GRMustacheRendering
 - (NSString *)renderForMustacheTag:(GRMustacheTag *)tag context:(GRMustacheContext *)context HTMLSafe:(BOOL *)HTMLSafe error:(NSError *__autoreleasing *)error
 {
-    // Render the Mustache tag with an extended context
+    // Add self to the tag delegate stack.
+    // Self will be notified of the rendering of all inner tags of the section,
+    // without polluting the context with its own keys:
     context = [context contextByAddingTagDelegate:self];
+    
+    // And render the tag in this extented context:
     return [tag renderContentWithContext:context HTMLSafe:HTMLSafe error:error];
 }
 
 // GRMustacheTagDelegate
 - (id)mustacheTag:(GRMustacheTag *)tag willRenderObject:(id)object
 {
-    return [[object description] uppercaseString];
+    // Our transformation applies to strings, not to objects of type `id`.
+    //
+    // So let's transform the *rendering* of the object, not the object itself.
+    //
+    // However, we do not have the rendering yet. So we return a rendering
+    // object that will eventually render the object, and transform the
+    // rendering.
+    
+    return [GRMustache renderingObjectWithBlock:^NSString *(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error) {
+        
+        // First render:
+        
+        NSString *rendering = [[GRMustache renderingObjectForObject:object] renderForMustacheTag:tag context:context HTMLSafe:HTMLSafe error:error];
+        
+        // And then apply our transformation:
+        
+        return [rendering uppercaseString];
+    }];
 }
 
 @end

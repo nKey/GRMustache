@@ -83,8 +83,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Returns a GRMustacheFilter object that executes the provided block when
- * tranforming a value.
+ * Returns a generic filter that executes the provided block when tranforming
+ * a value.
+ *
+ * Should your filter process strings, refrain yourself from casting the
+ * `id` value to a string using the [NSObject description] method. Instead, use
+ * the stringFilterWithBlock: method.
  *
  * @param block   The block that transforms its input.
  *
@@ -92,9 +96,64 @@
  *
  * @since v4.3
  *
+ * @see stringFilterWithBlock:
  * @see variadicFilterWithBlock:
  */
 + (id<GRMustacheFilter>)filterWithBlock:(id(^)(id value))block AVAILABLE_GRMUSTACHE_VERSION_6_0_AND_LATER;
+
+/**
+ * Returns a string-oriented filter that executes the provided block when
+ * tranforming a string.
+ *
+ * Unlike filters returned by the filterWithBlock: method, such a filter is
+ * always given a string, even if the filter parameter in the mustache template
+ * evaluates to some other kind of object.
+ *
+ * That string is the rendering of the filter parameter, before any HTML
+ * escaping has been applied.
+ *
+ * For example, consider the `{{ f(x) }}` tag: should `x` evaluate to a number,
+ * the `f` filter would be given the rendering of the number.
+ *
+ * This method is a shortcut. It is equivalent to the following lines of code:
+ *
+ *     // The string transformation block:
+ *
+ *     id(^block)(NSString *) = ^(NSString *string) {
+ *         return <the transformed string>;
+ *     };
+ *
+ *     // The filter:
+ *
+ *     id filter = [GRMustacheFilter filterWithBlock:^id(id value) {
+ *     
+ *         // Our transformation applies to strings, not to objects of type `id`.
+ *         //
+ *         // So let's transform the *rendering* of the object, not the object itself.
+ *         //
+ *         // However, we do not have the rendering yet. So we return a rendering
+ *         // object that will eventually render the object, and transform the
+ *         // rendering.
+ *         
+ *         return [GRMustache renderingObjectWithBlock:^NSString *(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error) {
+ *             
+ *             // First render:
+ *             
+ *             NSString *rendering = [[GRMustache renderingObjectForObject:value] renderForMustacheTag:tag context:context HTMLSafe:HTMLSafe error:error];
+ *             
+ *             // And then apply our transformation:
+ *             
+ *             return block(rendering);
+ *         }];
+ *     }];
+ *
+ * @param block   The block that transforms its input.
+ *
+ * @return a GRMustacheFilter object.
+ *
+ * @since v6.9
+ */
++ (id<GRMustacheFilter>)stringFilterWithBlock:(id(^)(NSString *string))block AVAILABLE_GRMUSTACHE_VERSION_6_9_AND_LATER;
 
 /**
  * Returns a GRMustacheFilter object that executes the provided block, given an
