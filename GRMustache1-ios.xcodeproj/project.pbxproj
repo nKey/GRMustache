@@ -770,7 +770,7 @@
 			name = GRMustache1Tests;
 			productName = "GRMustache1-ios-Tests";
 			productReference = 565F6929139FF017004D1894 /* GRMustache1Tests.octest */;
-			productType = "com.apple.product-type.bundle";
+			productType = "com.apple.product-type.bundle.ocunit-test";
 		};
 		5665298F13A12E9600B98B87 /* GRMustache1-ios3 */ = {
 			isa = PBXNativeTarget;
@@ -961,7 +961,7 @@
 		565F693D139FF017004D1894 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = armv7;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
@@ -971,21 +971,21 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				SDKROOT = iphoneos6.1;
 				SKIP_INSTALL = YES;
-				VALID_ARCHS = "arm64 armv7";
+				VALID_ARCHS = armv7;
 			};
 			name = Debug;
 		};
 		565F693E139FF017004D1894 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = armv7;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				SDKROOT = iphoneos6.1;
 				SKIP_INSTALL = YES;
-				VALID_ARCHS = "arm64 armv7";
+				VALID_ARCHS = armv7;
 			};
 			name = Release;
 		};

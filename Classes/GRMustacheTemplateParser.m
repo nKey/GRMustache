@@ -149,7 +149,7 @@
 			
 		case GRMustacheTokenTypeSectionClosing:
 			if ([token.content isEqualToString:currentSectionOpeningToken.content]) {
-                NSError *invocationError;
+                NSError *invocationError = nil;
                 GRMustacheInvocation *invocation = [self invocationWithToken:token error:&invocationError];
                 if (invocation) {
                     NSRange currentSectionOpeningTokenRange = currentSectionOpeningToken.range;
